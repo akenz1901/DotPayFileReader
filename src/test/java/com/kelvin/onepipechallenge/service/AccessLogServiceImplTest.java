@@ -14,6 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +76,7 @@ class AccessLogServiceImplTest {
         File file = new File(path);
         accessLogService.collectAndStoreLogsIntoDataBase(file);
         LogRequest logRequest = new LogRequest();
+
         logRequest.setStartDate("2017-01-01.13:00:00");
         logRequest.setDuration(Duration.hourly);
         logRequest.setThreshold(100L);

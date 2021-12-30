@@ -1,5 +1,6 @@
 package com.kelvin.onepipechallenge.data.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class Log {
     private Long id;
 
     @Column(columnDefinition = "DATETIME")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private LocalDateTime startDate;
     private String ip;
     private String method;

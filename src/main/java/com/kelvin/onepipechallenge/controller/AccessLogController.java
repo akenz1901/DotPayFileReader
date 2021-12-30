@@ -1,23 +1,29 @@
 package com.kelvin.onepipechallenge.controller;
 
+import com.kelvin.onepipechallenge.data.dto.IpInfo;
+import com.kelvin.onepipechallenge.data.dto.LogRequest;
+import com.kelvin.onepipechallenge.data.model.Log;
+import com.kelvin.onepipechallenge.exception.ApplicationException;
 import com.kelvin.onepipechallenge.service.AccessLogService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Objects;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1")
 public class AccessLogController {
-    @Autowired
-    private AccessLogService accessLogService;
+
+    private final AccessLogService accessLogService;
+
     @PostMapping("/load-file")
     public ResponseEntity<?>uploadAccessLog(@RequestParam(value = "file", required = false) MultipartFile file){
         if(file == null){
@@ -39,5 +45,27 @@ public class AccessLogController {
             return ResponseEntity.ok().body("Please Load a file");
         }
     }
+
+    @GetMapping("/listIp")
+    public ResponseEntity<?> getListOfIp(@RequestBody LogRequest request){
+        try{
+
+            List<String> response = accessLogService.findIpNumbersThatMadeRequestByStartDateDurationAndThreshold(request);
+            return ResponseEntity.ok().body(response);
+        }catch(ApplicationException ex){
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/ipRequest")
+    public ResponseEntity<?> getIpRequest(@RequestBody IpInfo ipNumber){
+        try{
+            List<Log> response = accessLogService.findRequestsMadeByAGivenIpNumber(ipNumber.getIpNumber());
+            return ResponseEntity.ok().body(response);
+        }catch(ApplicationException ex){
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
 
 }

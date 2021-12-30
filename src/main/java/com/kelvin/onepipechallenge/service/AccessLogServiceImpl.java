@@ -44,4 +44,11 @@ public class AccessLogServiceImpl implements AccessLogService{
         reader.close();
         return logs;
     }
+
+    @Override
+    public List<Log> collectAndStoreLogsIntoDataBase(File file) throws FileNotFoundException {
+        List<Log>accessLogs = collectLogsFromAccessLogFile(file);
+        return accessLogRepository.saveAll(accessLogs);
+    }
+
 }

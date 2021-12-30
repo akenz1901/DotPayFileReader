@@ -42,5 +42,15 @@ class AccessLogServiceImplTest {
         assertThat(accessLogs.size()).isEqualTo(116484);
         assertThat(accessLogs).isNotEmpty();
     }
+    @Test
+    @DisplayName("Read and Save The Access Logs Content into MySql Data Base")
+    void testThatLogsCanBeReadAndSaveToTheMySqlDataBase() throws FileNotFoundException {
+        String path = "src/main/resources/access.log";
+        File file = new File(path);
+        List<Log> accessLogs = accessLogService.collectAndStoreLogsIntoDataBase(file);
+        assertThat(accessLogs.size()).isEqualTo(116484);
+        assertThat(accessLogs).isNotEmpty();
+    }
+
 
 }

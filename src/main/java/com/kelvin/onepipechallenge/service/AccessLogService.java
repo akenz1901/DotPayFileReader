@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface AccessLogService {
     List<Log> collectLogsFromAccessLogFile(File file) throws FileNotFoundException;
+    List<Log> collectAndStoreLogsIntoDataBase(File file) throws FileNotFoundException;
 }

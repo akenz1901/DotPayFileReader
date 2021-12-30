@@ -81,5 +81,4 @@ class AccessLogServiceImplTest {
         log.info("ipNumbers after requesting -> {}", ipNumbers);
          assertThat(ipNumbers).isNotEmpty();
         }
-
     }

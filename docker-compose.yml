@@ -2,15 +2,15 @@ version: '2.1'
 
 services:
   log-parser-service:
-    build:  .
+    build: .
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_USERNAME=${DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      db_service:
+      db-service:
         condition: service_healthy
     volumes:
       - .m2:/root/.m2
@@ -24,11 +24,11 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${ROOT_PASS}
       - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_USER=${DB-USER}
+      - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASS}
     container_name: ${DB_CONTAINER_NAME}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-p1234567", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-uuser", "-pkelvin123", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 10

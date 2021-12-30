@@ -1,9 +1,10 @@
 package com.kelvin.onepipechallenge.service;
 
+import com.kelvin.onepipechallenge.data.dto.LogRequest;
+import com.kelvin.onepipechallenge.data.model.Duration;
 import com.kelvin.onepipechallenge.data.model.Log;
 import com.kelvin.onepipechallenge.data.repository.AccessLogsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -49,6 +50,27 @@ public class AccessLogServiceImpl implements AccessLogService{
     public List<Log> collectAndStoreLogsIntoDataBase(File file) throws FileNotFoundException {
         List<Log>accessLogs = collectLogsFromAccessLogFile(file);
         return accessLogRepository.saveAll(accessLogs);
+    }
+
+    @Override
+    public List<Log> findRequestsMadeByAGivenIpNumber(String ipNumber) {
+        return accessLogRepository.findRequestMadeByAnIpNumber(ipNumber);
+    }
+
+    @Override
+    public List<String> findIpNumbersThatMadeRequestByStartDateDurationAndThreshold(LogRequest logRequest) {
+        LocalDateTime date = LocalDateTime.parse(logRequest.getStartDate().replace(".","T"));
+        LocalDateTime dateTime = null;
+        if(logRequest.getDuration().equals(Duration.hourly)){
+            dateTime = date.plusHours(1);
+        }else{
+            if(logRequest.getDuration().equals(Duration.daily)){
+                dateTime = date.plusHours(24);
+            }else{
+                throw new IllegalArgumentException("Duration not allowed");
+            }
+        }
+        return accessLogRepository.findByStartDateIsBetweenAndGreaterThanThreshold(date, dateTime, logRequest.getThreshold());
     }
 
 }

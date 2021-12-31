@@ -18,8 +18,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -34,49 +36,36 @@ class AccessLogServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        accessLogsRep.deleteAll();
+        //accessLogsRep.deleteAll();
     }
 
     @AfterEach
     void tearDown() {
     }
-    @Test
-    @DisplayName("Read from the access log file")
-    void testThatFilesCanBeReadAndDeleted() throws FileNotFoundException {
-        String path = "src/main/resources/access.log";
-        File file = new File(path);
-        List<Log> accessLogs = accessLogService.collectLogsFromAccessLogFile(file);
-        assertThat(accessLogs.size()).isEqualTo(116484);
-        assertThat(accessLogs).isNotEmpty();
-    }
+
     @Test
     @DisplayName("Read and Save The Access Logs Content into MySql Data Base")
-    void testThatLogsCanBeReadAndSaveToTheMySqlDataBase() throws FileNotFoundException {
+    void testThatLogsCanBeReadAndSaveToTheMySqlDataBase() throws Exception {
         String path = "src/main/resources/access.log";
         File file = new File(path);
-        List<Log> accessLogs = accessLogService.collectAndStoreLogsIntoDataBase(file);
-        assertThat(accessLogs.size()).isEqualTo(116484);
-        assertThat(accessLogs).isNotEmpty();
+        CompletableFuture<List<Log>> accessLogs = accessLogService.saveFiles(file);
+        assertThat(accessLogs.get().size()).isEqualTo(116484);
+        assertThat(accessLogs.get()).isNotEmpty();
     }
+
     @Test
     @DisplayName("Find Requests made by a given IP Number")
-    void testToFindAllRequestMadeByAGivenIpNumber() throws FileNotFoundException {
-        String path = "src/main/resources/access.log";
-        File file = new File(path);
-        accessLogService.collectAndStoreLogsIntoDataBase(file);
-        String ipNumber = "192.168.102.136";
+    void testToFindAllRequestMadeByAGivenIpNumber() throws Exception {
+        String ipNumber = "192.168.14.43";
         List<Log> totalRequest = accessLogService.findRequestsMadeByAGivenIpNumber(ipNumber);
         assertThat(totalRequest.size()).isNotEqualTo(0);
         assertThat(totalRequest).isNotEmpty();
     }
+
     @Test
     @DisplayName("Find Ip Numbers Between Start Date and End Dates Using its Threshold")
-    void testToFindIpNumbersWithItsThresholdBetweenStartDateAndEndDates() throws FileNotFoundException {
-        String path = "src/main/resources/access.log";
-        File file = new File(path);
-        accessLogService.collectAndStoreLogsIntoDataBase(file);
+    void testToFindIpNumbersWithItsThresholdBetweenStartDateAndEndDates() throws Exception {
         LogRequest logRequest = new LogRequest();
-
         logRequest.setStartDate("2017-01-01.13:00:00");
         logRequest.setDuration(Duration.hourly);
         logRequest.setThreshold(100L);

@@ -6,17 +6,19 @@ import com.kelvin.onepipechallenge.data.model.Log;
 import com.kelvin.onepipechallenge.data.repository.AccessLogsRepository;
 import com.kelvin.onepipechallenge.exception.ApplicationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.FileNotFoundException;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j
@@ -25,39 +27,6 @@ public class AccessLogServiceImpl implements AccessLogService{
 
     @Autowired
     AccessLogsRepository accessLogRepository;
-
-    @Override
-    public List<Log> collectLogsFromAccessLogFile(File file) throws FileNotFoundException {
-        List<Log> logs = new ArrayList<>();
-        Scanner reader = new Scanner(file);
-        while (reader.hasNextLine()) {
-            String line = reader.nextLine();
-            Scanner read = new Scanner(line);
-            read.useDelimiter("\\|");
-            while (read.hasNext()) {
-                Log log = new Log();
-                String date = read.next();
-//                date = date.replace(" ", "T");
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-                log.setStartDate(LocalDateTime.parse(date, formatter));
-                log.setIp(read.next());
-                log.setMethod(read.next());
-                log.setCode(read.next());
-                log.setClient(read.next());
-                logs.add(log);
-            }
-            read.close();
-        }
-        reader.close();
-        return logs;
-    }
-
-    @Override
-    public List<Log> collectAndStoreLogsIntoDataBase(File file) throws FileNotFoundException {
-        List<Log>accessLogs = collectLogsFromAccessLogFile(file);
-        return accessLogRepository.saveAll(accessLogs);
-    }
 
     @Override
     public List<Log> findRequestsMadeByAGivenIpNumber(String ipNumber) {
@@ -75,8 +44,6 @@ public class AccessLogServiceImpl implements AccessLogService{
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd.HH:mm:ss");
             date = LocalDateTime.parse(logRequest.getStartDate(), formatter);
-
-//            date = logRequest.getStartDate();
         } catch(DateTimeParseException ex){
             log.error("Invalid date --> {}", logRequest.getStartDate());
             throw new ApplicationException("The date " + logRequest.getStartDate() + " cannot be parsed");
@@ -94,4 +61,66 @@ public class AccessLogServiceImpl implements AccessLogService{
         return accessLogRepository.findByStartDateIsBetweenAndGreaterThanThreshold(date, dateTime, logRequest.getThreshold());
     }
 
+    @Async
+    @Override
+    public CompletableFuture<List<Log>> saveFiles(MultipartFile file) throws Exception {
+        List<Log> logs = parseCSVFile(file);
+        logs = accessLogRepository.saveAll(logs);
+        return CompletableFuture.completedFuture(logs);
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<List<Log>> saveFiles(File file) throws Exception {
+        List<Log> logs = parseCSVFile(file);
+        logs = accessLogRepository.saveAll(logs);
+        return CompletableFuture.completedFuture(logs);
+    }
+
+    private List<Log> parseCSVFile(final MultipartFile file) throws Exception {
+        final List<Log> logs = new ArrayList<>();
+        try {
+            try (final BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    final String[] data = line.split("\\|");
+                    final Log newLog = new Log();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+                    newLog.setStartDate(LocalDateTime.parse(data[0], formatter));
+                    newLog.setIp(data[1]);
+                    newLog.setMethod(data[2]);
+                    newLog.setCode(data[3]);
+                    newLog.setClient(data[4]);
+                    logs.add(newLog);
+                }
+                return logs;
+            }
+        } catch (final IOException e) {
+            throw new Exception("Failed to parse CSV file {}", e);
+        }
+    }
+
+    private List<Log> parseCSVFile(final File file) throws Exception {
+        final List<Log> logs = new ArrayList<>();
+        try {
+            try (final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    final String[] data = line.split("\\|");
+                    final Log newLog = new Log();
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+                    newLog.setStartDate(LocalDateTime.parse(data[0], formatter));
+                    newLog.setIp(data[1]);
+                    newLog.setMethod(data[2]);
+                    newLog.setCode(data[3]);
+                    newLog.setClient(data[4]);
+                    logs.add(newLog);
+                }
+                return logs;
+            }
+        } catch (final IOException e) {
+            throw new Exception("Failed to parse CSV file {}", e);
+        }
+    }
 }

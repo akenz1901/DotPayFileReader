@@ -48,9 +48,9 @@ class AccessLogServiceImplTest {
     void testThatLogsCanBeReadAndSaveToTheMySqlDataBase() throws Exception {
         String path = "src/main/resources/access.log";
         File file = new File(path);
-        CompletableFuture<List<Log>> accessLogs = accessLogService.saveFiles(file);
-        assertThat(accessLogs.get().size()).isEqualTo(116484);
-        assertThat(accessLogs.get()).isNotEmpty();
+        List<Log> accessLogs = accessLogService.saveFiles(file);
+        assertThat(accessLogs.size()).isEqualTo(116484);
+        assertThat(accessLogs).isNotEmpty();
     }
 
     @Test

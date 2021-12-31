@@ -55,6 +55,4 @@ public class AccessLogController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-
-
 }

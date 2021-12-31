@@ -12,6 +12,6 @@ import java.util.concurrent.CompletableFuture;
 public interface AccessLogService {
     List<Log> findRequestsMadeByAGivenIpNumber(String ipNumber);
     List<String> findIpNumbersThatMadeRequestByStartDateDurationAndThreshold(LogRequest logRequest);
-    CompletableFuture<List<Log>> saveFiles(MultipartFile file) throws Exception;
-    CompletableFuture<List<Log>> saveFiles(File file) throws Exception;
+    List<Log> saveFiles(MultipartFile file) throws Exception;
+    List<Log> saveFiles(File file) throws Exception;
 }

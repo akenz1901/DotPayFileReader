@@ -11,7 +11,7 @@ RUN mvn package -DskipTests
 # Runnable image
 FROM openjdk:12-alpine as runnable
 VOLUME /tmp
-VOLUME /logs
+VOLUME /userAccessLogs
 
 
 ARG JAR_FOLDER=/build/target
